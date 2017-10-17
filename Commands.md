@@ -239,10 +239,18 @@ ansible-playbook -i inventories/dev/dev_mgmt ./playbooks/site.yml --limit build 
 OpemSSL:
 
 
-openssl genrsa -out ./skeyos.com.key 4096
+openssl genrsa -out ./skeyos.com.key 4096 // create rsa key
+openssl genrsa -des3 -out server.key 1024 // create rsa key with des3 encryption (passphrase)
+openssl rsa -in server.key.org -out server.key // remove encryption (passphrase)
 openssl rsa -in ./skeyos.com.key -pubout > ./skeyos.com.key.pub
-openssl req -new -sha256 -key ./skeyos.com.key -out ./skeyos.csom.key.csr
+openssl req -new -sha256 -key ./skeyos.com.key -out ./skeyos.csom.key.csr // create sha256 CSR
+openssl req -new -key server.key -out server.csr // create CSR
+openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt // generate self-signed certificate
 openssl req -in ./skeyos.com.key.csr -noout -text // see the content of the certificate
+
+openssl x509 -in skeyos.com.chained.crt -text // print certificate 
+
+cat mycert.crt intermediate.cert.pem > skeyos.com.chained.crt
 
 
 PEM format - If they begin with -----BEGIN and you can read them in a text editor (they use base64, which is readable in ASCII, not binary format), they are in PEM format.
@@ -262,3 +270,58 @@ wc -l / count number of lines
 
 DU:
 du -sh ./* / check how many space is busy per specific catalogs
+
+Detail description of redirection operator in Unix/Linux: (https://stackoverflow.com/questions/6674327/redirect-all-output-to-file)
+
+Use this - "require command here" > log_file_name 2>&1
+
+> file redirects stdout to file
+1> file redirects stdout to file
+2> file redirects stderr to file
+&> file redirects stdout and stderr to file
+
+That part is written to stderr, use 2> to redirect it. For example:
+
+foo > stdout.txt 2> stderr.txt
+
+or if you want in same file:
+
+foo > allout.txt 2>&1
+
+----------
+*command* > file 2>&1 
+
+If you want to silence the error, do:
+
+*command* 2> /dev/null
+----------
+
+
+Command:
+
+foo >> output.txt 2>&1
+
+appends to the output.txt file, without replacing the content.
+
+
+GREP, EGREP, FGREP:
+
+Here are some example scenarios:
+
+    You have a file with a list of say ten Unix usernames in plain text. You want to search the group file on your machine to see if any of the ten users listed are in any special groups:
+
+    grep -F -f user_list.txt /etc/group
+
+    The reason the -F switch helps here is that the usernames in your pattern file are interpreted as plain text strings. Dots for example would be interpreted as dots rather than wild-cards.
+
+    You want to search using a fancy expression. For example parenthesis () can be used to indicate groups with | used as an OR operator. You could run this search using -E:
+
+    grep -E '^no(fork|group)' /etc/group
+
+    ...to return lines that start with either "nofork" or "nogroup". Without the -E switch you would have to escape the special characters involved because with normal pattern matching they would just search for that exact pattern;
+
+    grep '^no\(fork\|group\)' /etc/group
+
+
+
+https://unix.stackexchange.com/questions/17949/what-is-the-difference-between-grep-egrep-and-fgrep
