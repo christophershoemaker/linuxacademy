@@ -284,6 +284,8 @@ AWSCLI:
 aws iam get-instance-profile --instance-profile-name eb_inst_profile_demo
 aws iam delete-instance-profile --instance-profile-name eb_inst_profile_demo
 
+aws lambda get-policy --function-name daily_rds_snapshot
+
 WC:
 wc -l / count number of lines
 
