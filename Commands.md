@@ -239,9 +239,19 @@ ansible-playbook -i inventories/mgmt/ec2.py ./playbooks/site.yml --private-key=/
 ansible-playbook -i inventories/mgmt/ec2.py ./playbooks/site.yml --private-key=/tmp/surecert
 ansible-playbook -i inventories/mgmt/ec2.py ./playbooks/jenkins_restore.yml --private-key=/tmp/surecert --limit build.surecert.internal
 
+ansible-playbook -i inventories/prod/prod_mgmt ./playbooks/site.yml --limit proxy_tmp --check --diff
+
+ansible-playbook -i inventories/prod/prod_mgmt ./playbooks/site.yml --limit proxy_tmp --check --diff --tags "proxy_tmp"
+ansible-playbook -i inventories/dev/dev_mgmt ./playbooks/site.yml --limit proxy_temporary --check --diff --tags "proxytemporary"
 
 Lufthansa:
 ansible-playbook -i inventories/dev/dev_mgmt ./playbooks/site.yml --limit build --tags "jenkins" --check --diff
+
+Kibana and elasticsearch:
+https://kibana.mroapps.com/_cat/indices?v // show indices
+curl -XDELETE 'localhost:9200/twitter?pretty' // The above example deletes an index called twitter
+
+
 
 OpemSSL:
 
