@@ -126,6 +126,12 @@ gpasswd managers // Set password for group manages
 -A option to define group administrator(s)
 -M option to define members
 
+Unzip:
+
+unzip -Z1 file.zip // List files what's in
+unzip /tmp/jpgc-casutg-2.1.zip -d /opt/apache-jmeter-3.3 // unzip to specific directory
+unzip -o /tmp/jpgc-graphs-basic-2.0.zip -d /opt/apache-jmeter-3.3 // unzip with override options
+
 Uname:
 
 uname // retun information what kind of operating system
@@ -215,6 +221,13 @@ sudo docker exec -it -u root <<container_id_z_docker_ps>> bash
 
 docker exec -it -u root <<container_id_z_docker_ps>> bash
 
+
+Build docker image:
+docker build . // when you have specified docker image
+
+Docker cp file:
+docker cp <containerId>:/file/path/within/container /host/path/target
+
 SSH:
 ssh-copy-id // install your public key in a remote machine's authorized_keys - please test it how it works
 
@@ -234,6 +247,7 @@ ansible-playbook example.yml --tags "configuration,packages"
 ansible-playbook example.yml --check --diff --limit foo.example.com --tags "configuration,packages"
 ansible-playbook site.yml --check --diff --limit build.surecert.internal --tags "backup_scripts"
 ansible-playbook -i inventories/mgmt/ec2.py ./playbooks/site.yml --private-key=/tmp/surecert --check --diff --limit build.surecert.internal --tags "backup_scripts"
+ansible-playbook -i inventories/mgmt/ec2.py ./playbooks/site.yml --check --diff --limit build.surecert.internal --tags "logstash"
 
 
 ansible-playbook -i inventories/mgmt/ec2.py ./playbooks/site.yml --private-key=/tmp/surecert
@@ -277,6 +291,9 @@ PEM format - If they begin with -----BEGIN and you can read them in a text edito
 
 sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./logstash.key -out ./logstash.crt
 
+openssl s_client -connect {HOSTNAME}:{PORT} -showcerts // save a remote server SSL certificate locally as a file
+wget https:/server.edu:443/somepage --ca-certificate=mycertfile.pem // save a remote server SSL certificate locally as a file
+
 Rsync:
 sudo rsync -az /vagrant/ /surecert/
 
@@ -284,7 +301,20 @@ AWSCLI:
 aws iam get-instance-profile --instance-profile-name eb_inst_profile_demo
 aws iam delete-instance-profile --instance-profile-name eb_inst_profile_demo
 
+aws iam list-instance-profiles > list_profiles.json // list the profiles and attached roles
+
 aws lambda get-policy --function-name daily_rds_snapshot
+
+
+aws rds modify-db-cluster --db-cluster-identifier <value> --new-db-cluster-identifier <value>] --apply-immediately
+aws rds create-db-cluster-snapshot --db-cluster-snapshot-identifier <value> --db-cluster-identifier <value>
+
+aws rds create-db-cluster-snapshot --db-cluster-identifier backup-surecert-cluster-test-cluster  --db-cluster-snapshot-identifier backup-surecert-cluster-test
+aws rds create-db-cluster-snapshot --db-cluster-identifier backup-surecert-cluster-develop-cluster --db-cluster-snapshot-identifier backup-surecert-cluster-develop
+aws rds create-db-cluster-snapshot --db-cluster-identifier backup-surecert-cluster-accept-cluster --db-cluster-snapshot-identifier backup-surecert-cluster-accept
+
+aws s3 cp s3://mybucket/test.txt test2.txt
+aws s3 cp s3://mybucket . --recursive
 
 WC:
 wc -l / count number of lines
@@ -384,10 +414,18 @@ Here are some example scenarios:
 
     grep '^no\(fork\|group\)' /etc/group
 
+grep "^[^#;]" smb.conf // grep lines which does not begin with "#" or ";". The first ^ refers to the beginning of the line, so lines with comments starting after the first character will not be excluded. [^#;] means any character which is not # or ;
+
 
 
 https://unix.stackexchange.com/questions/17949/what-is-the-difference-between-grep-egrep-and-fgrep
 
+command inside dollar sign and parentheses: $(command):
+
+CWD="$(cd "$(dirname $0)"; pwd)"
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+Usage of the $ like $(echo foo) means run whatever is inside the parentheses in a subshell and return that as the value. In my example, you would get foo since echo will write foo to standard out
 
 watch
 
@@ -699,4 +737,11 @@ https://www.digitalocean.com/community/tutorials/how-to-setup-dns-slave-auto-con
 
 Managing secrets with vault:
 https://www.amon.cx/blog/managing-all-secrets-with-vault/
+
+Python eating memory, testing how docker ram works:
+https://utcc.utoronto.ca/~cks/space/blog/python/EatingMemory
+https://shuheikagawa.com/blog/2017/05/27/memory-usage/
+
+Start and shutdown hooks:
+https://askubuntu.com/questions/30383/best-way-to-make-a-shutdown-hook
 
