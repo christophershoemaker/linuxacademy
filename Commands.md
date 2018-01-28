@@ -458,6 +458,9 @@ UID     userid
 
 DN  Distinguish Name
 
+
+SSH Tunnels: - https://unix.stackexchange.com/questions/115897/whats-ssh-port-forwarding-and-whats-the-difference-between-ssh-local-and-remot:
+ssh -L 2000:localhost:8080 10.0.1.66
 ##################################################################################################################
 MAC - CLOSED CARDS:
 
