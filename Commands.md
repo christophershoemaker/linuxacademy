@@ -461,6 +461,11 @@ DN  Distinguish Name
 
 SSH Tunnels: - https://unix.stackexchange.com/questions/115897/whats-ssh-port-forwarding-and-whats-the-difference-between-ssh-local-and-remot:
 ssh -L 2000:localhost:8080 10.0.1.66
+
+
+GIT:
+git log -p --author="your_email@domain.com" --since="2018-01-11" --until="2018-01-29" // list commits
+
 ##################################################################################################################
 MAC - CLOSED CARDS:
 
