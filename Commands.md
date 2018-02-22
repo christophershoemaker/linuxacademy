@@ -151,6 +151,7 @@ tar -zxvf *.tar.gz // unpack
 
 tar -cvf myarchive.tar mydirectory/ //create simple tar archive
 tar -cvzf file.tar.gz inputfile1 inputfile2 // create compressed archive
+tar -cvf nginx-jumphost-prd.tar /etc/nginx
 
 cd // change directory
 pwd // print working directory
@@ -189,6 +190,10 @@ tcpdump -i eth1 // monitor all packets on eth1 interface
 tcpdump -i eth1 'port 80' // monitor all traffic on port 80 ( HTTP )
 tcpdump -vv -x -X -s 1500 -i eth1 'port 25' // monitor all traffic on port 25 ( SMTP )
 
+tcpdump -nl -s 0 -A -i eth0 -c 500 'port 443' | tee output.file //output to file and stdout
+
+sudo tcpdump -vv -i eth0 'port 443' | tee output.log / to redirect logs on consile and file
+
 -s 1500 // snarf snaplen bytes of data from each packet rather than the default of 68.
 -x // when parsing and printing, in addition to printing the headers of each packet, print the data of each packet.
 -X // when parsing and printing, in addition to printing the headers of each packet, print the data of each packet (minus its link level header) in hex and ASCII. This is very handy for analysing new protocols.
@@ -220,6 +225,8 @@ sudo docker exec -i -t container_id /bin/bash ( or just bash )
 sudo docker exec -it -u root <<container_id_z_docker_ps>> bash
 
 docker exec -it -u root <<container_id_z_docker_ps>> bash
+
+docker logs --follow CONTAINER_ID
 
 
 Build docker image:
@@ -260,6 +267,7 @@ ansible-playbook -i inventories/dev/dev_mgmt ./playbooks/site.yml --limit proxy_
 
 Lufthansa:
 ansible-playbook -i inventories/dev/dev_mgmt ./playbooks/site.yml --limit build --tags "jenkins" --check --diff
+ansible-playbook -i inventories/prod/prod_mgmt ./playbooks/site.yml --limit jump --check --diff
 
 Kibana and elasticsearch:
 https://kibana.mroapps.com/_cat/indices?v // show indices
@@ -315,6 +323,10 @@ aws rds create-db-cluster-snapshot --db-cluster-identifier backup-surecert-clust
 
 aws s3 cp s3://mybucket/test.txt test2.txt
 aws s3 cp s3://mybucket . --recursive
+
+DIFF:
+
+diff -bur folder1/ folder2/
 
 WC:
 wc -l / count number of lines
@@ -465,6 +477,21 @@ ssh -L 2000:localhost:8080 10.0.1.66
 
 GIT:
 git log -p --author="your_email@domain.com" --since="2018-01-11" --until="2018-01-29" // list commits
+
+SET: //https://stackoverflow.com/questions/2853803/in-a-shell-script-echo-shell-commands-as-they-are-executed
+
+set -x or set -o xtrace expands variables and prints a little + sign before the line.
+
+set -v or set -o verbose does not expand the variables before printing.
+
+Use set +x and set +v to turn off the above settings.
+
+
+Security issue:
+cat ./*access.log | awk '{print $1}' | sort -r | uniq -c | sort -nr
+cat ./*error.log | grep -o 'client: [0-9.]*' | sort -r | uniq -c | sort -nr
+zcat ./*.gz | awk '{print $1}' | sort -r | uniq -c | sort -nr
+zcat ./*.gz | grep -o 'client: [0-9.]*' | sort -r | uniq -c | sort -nr
 
 ##################################################################################################################
 MAC - CLOSED CARDS:
