@@ -475,6 +475,9 @@ SSH Tunnels: - https://unix.stackexchange.com/questions/115897/whats-ssh-port-fo
 ssh -L 2000:localhost:8080 10.0.1.66
 
 
+LAST:
+last // show last logged users
+
 GIT:
 git log -p --author="your_email@domain.com" --since="2018-01-11" --until="2018-01-29" // list commits
 
