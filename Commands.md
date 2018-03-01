@@ -198,6 +198,9 @@ sudo tcpdump -vv -i eth0 'port 443' | tee output.log / to redirect logs on consi
 -x // when parsing and printing, in addition to printing the headers of each packet, print the data of each packet.
 -X // when parsing and printing, in addition to printing the headers of each packet, print the data of each packet (minus its link level header) in hex and ASCII. This is very handy for analysing new protocols.
 
+TEE:
+echo "hello" | sudo tee f.txt  # add -a for append (>>)
+
 Docker:
 docker images -a // list all images
 docker rmi Image // remove image
@@ -480,6 +483,13 @@ last // show last logged users
 
 GIT:
 git log -p --author="your_email@domain.com" --since="2018-01-11" --until="2018-01-29" // list commits
+
+git config --list //will show credential.helper = manager (this is on a windows machine)
+
+git config credential.helper "" //To disable this cached username/password for your current local git folder, simply enter
+
+git config --global user.email "krzysztofsz@kainos.com"
+git config --global user.name "Krzysztof Szewczyk"
 
 SET: //https://stackoverflow.com/questions/2853803/in-a-shell-script-echo-shell-commands-as-they-are-executed
 
