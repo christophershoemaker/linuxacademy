@@ -238,6 +238,25 @@ docker build . // when you have specified docker image
 Docker cp file:
 docker cp <containerId>:/file/path/within/container /host/path/target
 
+
+TEST: // https://ryanstutorials.net/bash-scripting-tutorial/bash-if-statements.php
+The square brackets ( [ ] ) in the if statement above are actually a reference to the command test. This means that all of the operators that test allows may be used here as well. Look up the man page for test to see all of the possible operators (there are quite a few) but some of the more common ones are listed below.
+Operator  Description
+! EXPRESSION  The EXPRESSION is false.
+-n STRING   The length of STRING is greater than zero.
+-z STRING   The lengh of STRING is zero (ie it is empty).
+STRING1 = STRING2   STRING1 is equal to STRING2
+STRING1 != STRING2  STRING1 is not equal to STRING2
+INTEGER1 -eq INTEGER2   INTEGER1 is numerically equal to INTEGER2
+INTEGER1 -gt INTEGER2   INTEGER1 is numerically greater than INTEGER2
+INTEGER1 -lt INTEGER2   INTEGER1 is numerically less than INTEGER2
+-d FILE   FILE exists and is a directory.
+-e FILE   FILE exists.
+-r FILE   FILE exists and the read permission is granted.
+-s FILE   FILE exists and it's size is greater than zero (ie. it is not empty).
+-w FILE   FILE exists and the write permission is granted.
+-x FILE   FILE exists and the execute permission is granted.
+
 SSH:
 ssh-copy-id // install your public key in a remote machine's authorized_keys - please test it how it works
 
@@ -313,6 +332,13 @@ aws iam get-instance-profile --instance-profile-name eb_inst_profile_demo
 aws iam delete-instance-profile --instance-profile-name eb_inst_profile_demo
 
 aws iam list-instance-profiles > list_profiles.json // list the profiles and attached roles
+
+
+aws iam list-server-certificates
+aws iam get-server-certificate --server-certificate-name
+aws iam delete-server-certificate --server-certificate-name
+aws iam upload-server-certificate --server-certificate-name KSTestServerCertificate --certificate-body file://skeyos.com.crt --private-key file://app.skeyos.com.key
+
 
 aws lambda get-policy --function-name daily_rds_snapshot
 
@@ -490,6 +516,8 @@ git config credential.helper "" //To disable this cached username/password for y
 
 git config --global user.email "krzysztofsz@kainos.com"
 git config --global user.name "Krzysztof Szewczyk"
+
+git rebase -i HEAD~4 [commit_id] //squash 
 
 SET: //https://stackoverflow.com/questions/2853803/in-a-shell-script-echo-shell-commands-as-they-are-executed
 
@@ -793,3 +821,54 @@ https://shuheikagawa.com/blog/2017/05/27/memory-usage/
 Start and shutdown hooks:
 https://askubuntu.com/questions/30383/best-way-to-make-a-shutdown-hook
 
+Kumple:
+https://github.com/mazur92/simple-azure-vpn#note-about-operating-systems
+
+
+
+
+Windows:
+
+BCDEDIT
+
+Boot Configuration Data jest magazynem, w którym system Windows Vista (a także późniejsze) przechowują pliki oraz ustawienia aplikacji dotyczące rozruchu. BCDEdit.exe jest edytorem z linii poleceń systemu, dzięki któremu możemy zarządzać magazynem danych konfiguracji rozruchu.
+
+C:\windows\system32>bcdedit
+
+Windows Boot Manager
+--------------------
+identifier              {bootmgr}
+device                  partition=\Device\HarddiskVolume1
+path                    \EFI\Microsoft\Boot\bootmgfw.efi
+description             Windows Boot Manager
+locale                  en-US
+inherit                 {globalsettings}
+integrityservices       Enable
+default                 {current}
+resumeobject            {8c72885b-f9b6-11e6-a6a2-28f10e0e9eb6}
+displayorder            {current}
+toolsdisplayorder       {memdiag}
+timeout                 30
+
+Windows Boot Loader
+-------------------
+identifier              {current}
+device                  partition=C:
+path                    \windows\system32\winload.efi
+description             Windows 8.1
+locale                  en-US
+inherit                 {bootloadersettings}
+recoverysequence        {8c72885d-f9b6-11e6-a6a2-28f10e0e9eb6}
+integrityservices       Enable
+recoveryenabled         Yes
+isolatedcontext         Yes
+allowedinmemorysettings 0x15000075
+osdevice                partition=C:
+systemroot              \windows
+resumeobject            {8c72885b-f9b6-11e6-a6a2-28f10e0e9eb6}
+nx                      OptIn
+bootmenupolicy          Standard
+hypervisorlaunchtype    Off
+
+
+BCDEDIT /Set {current} hypervisorlaunchtype auto //Enable hyper-v at te startup
