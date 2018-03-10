@@ -402,6 +402,32 @@ sleep 1.5
 To sleep for .5 seconds:
 sleep .5
 
+
+
+BOOTLOADER MISSING : 
+https://askubuntu.com/questions/397485/what-to-do-when-i-get-an-attempt-to-read-or-write-outside-of-disk-hd0-error
+Locate the partition in which linux is present with the help of following technique
+
+grub rescue > ls
+(hd0) (hd0, msdos9)
+grub rescue > ls (hd0,msdos9)/
+grub rescue > ls (hd0,msdos8)/
+grub rescue > ls (hd0,msdos5)/ # suppose this is root and bootloader of linux
+grub rescue > ls (hd0,msdos5)/
+grub rescue > set root=(hd0,msdos5)
+grub rescue > set prefix=(hd0,msdos5)/boot/grub
+grub rescue > insmod normal
+grub rescue > normal
+
+Now, system's boot menu appears. Boot into linux.
+
+sudo update-grub
+sudo grub-install  /dev/sda # If the drive is hd0 the equivalent is sda, if it's hd1 then use sdb
+
+
+
+
+
 REDIRESTION OUTPUT, ERRORS etc:
 
 Detail description of redirection operator in Unix/Linux: (https://stackoverflow.com/questions/6674327/redirect-all-output-to-file)
@@ -872,3 +898,4 @@ hypervisorlaunchtype    Off
 
 
 BCDEDIT /Set {current} hypervisorlaunchtype auto //Enable hyper-v at te startup
+
