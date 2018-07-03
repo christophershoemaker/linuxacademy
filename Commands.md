@@ -14,9 +14,13 @@ apt-get autoremove apache2 // remove dependencies for apache2 package
 apt-get upgrade // upgrade all packages in the system
 apt-get dist-upgrade // update system distribution
 
+Having *.deb file you can install it using apt-get install package_name. But first move your .deb file to /var/cache/apt/archives/ directory. After executing this command, it will automatically download its dependencies.
+
 dpkg - for installing *.deb files
 
 dpkg -i *.deb // install package - error dependencies could occur
+dpkg-repack gparted // create deb package from already installed package
+rpmrebuild <package_name>
 
 Trick how to resolve error dependencies:
 apt-get update // update cache
@@ -43,6 +47,7 @@ yum deplist httpd // see dependency list
 yum clean packages // delete instalation files, remove all temporary files
 yum makecache // refresh yum cache
 yum clean all // clean all cache
+yum whatprovides <package_name>
 
 rpm
 
@@ -79,6 +84,7 @@ ls * // list similar to recursively
 mkdir // create directory
 cd // change directory
 touch // create file
+touch /var/log/temp.log && echo "DEBUG tescik obiad" >> /var/log/temp.log
 
 clear // clear screen
 halt // shutdown os
@@ -97,7 +103,27 @@ whoami // shows the current user logged in
 route // view out routing table
 eval // run the arguments as a command in the current shell
 
-EXEC 
+CP, MV: // https://www.cyberciti.biz/faq/explain-brace-expansion-in-cp-mv-bash-shell-commands/
+Explain: {,} in cp or mv
+echo foo{1,2,3}.txt // Output: foo1.txt foo2.txt foo3.txt
+
+Examples:
+echo file.txt{,.bak}
+echo file-{a..d}.txt
+echo mkdir -p /apache-jail/{usr,bin,lib64,dev}
+echo cp httpd.conf{,.backup}
+echo mv delta.{txt,doc}
+
+cp -v file1.txt{,.bak} // cp -v file1.txt file1.txt.bak
+
+FIND:
+find . -name '*.h'
+find . -name '*.h' -o -name '*.cpp' -exec grep "CP_Image" {} \; -print
+
+grep -r --include=\*.txt 'searchterm' ./ // case sensitive varsion
+grep -r -i --include=\*.txt 'searchterm' ./ // case-insensitive version
+
+EXEC:
 
 What exec cmd does, is exactly the same as just running cmd, except that the current shell is replaced with the command, instead of a separate process being run. Internally, running say /bin/ls will call fork() to create a child process, and then exec() in the child to execute /bin/ls. exec /bin/ls on the other hand will not fork, but just replaces the shell.
 
@@ -145,6 +171,14 @@ uname -i // display hardware platform
 uanem -o // display operating system
 uname -a // all information in one line
 
+Pidof:
+pidof <program> -- find the process ID of a running program. 
+
+Lsof:
+lsof - list open files
+-p s
+    This option excludes or selects the listing of files for the processes whose optional process IDentification (PID) numbers are in the comma-separated set s - e.g., ''123'' or ''123,^456''. (There should be no spaces in the set.)
+    
 Tar:
 
 tar -zxvf *.tar.gz // unpack
@@ -207,8 +241,16 @@ docker rmi Image // remove image
 docker images -f dangling=true // list danling images
 docker rmi $(docker images -f dangling=true -q) // remove danling images
 docker rmi $(docker images -a -q) // remove all images
+sudo docker rmi -f $(sudo docker images -a -q) // force to remove images
 
-docker ps -a // list containers
+docker ps -a // list containers // https://stackoverflow.com/questions/41122446/get-the-names-of-containers-in-docker
+docker ps -a --format "{{.ID}}: {{.Name}}"
+caee09882462: peaceful_saha
+docker ps -a --format "table {{.ID}}\t{{.Names}}"
+CONTAINER ID        NAMES
+caee09882462        peaceful_saha
+
+
 docker rm ID_or_Name ID_or_Name // remove container
 docker ps -a -f status=exited // list all exited containers
 docker rm $(docker ps -a -f status=exited -q) // remove all exited containers
@@ -226,6 +268,7 @@ docker attach container_id
 If we use attach we can use only one instance of shell. So if we want open new terminal with new instance of container's shell, we just need run the following:
 sudo docker exec -i -t container_id /bin/bash ( or just bash )
 sudo docker exec -it -u root <<container_id_z_docker_ps>> bash
+sudo docker exec -it -u root $( sudo docker ps --latest --format "{{.ID}}" ) bash
 
 docker exec -it -u root <<container_id_z_docker_ps>> bash
 
@@ -238,24 +281,382 @@ docker build . // when you have specified docker image
 Docker cp file:
 docker cp <containerId>:/file/path/within/container /host/path/target
 
+HISTORY:
+history -c //clean history for current shell
+rm ~/.bash_history // clear all history
+
+WAIT:
+wait // command which pauses until execution of a background process has ended.
+
+SET:
+
+Change the value of a shell option and set the positional parameters, or display the names and values of shell variables.
+
+SHELL/BASH scripts:
+================================================================================
+Variables: // https://superuser.com/questions/247127/what-is-and-in-linux/247131
+--------------------------------------------------------------------------------------------
+$? - The return value is stored in. 0 indicates success, others indicates error.
+$@ - print all arguments submitted
+
+$#    Stores the number of command-line arguments that 
+      were passed to the shell program.
+$?    Stores the exit value of the last command that was 
+      executed.
+$0    Stores the first word of the entered command (the 
+      name of the shell program).
+$*    Stores all the arguments that were entered on the
+      command line ($1 $2 ...).
+"$@"  Stores all the arguments that were entered
+      on the command line, individually quoted ("$1" "$2" ...).
+
+So basically, $# is a number of arguments given when your script was executed. $* is a string containing all arguments. For example, $1 is the first argument and so on. This is useful, if you want to access a specific argument in your script.
+
+As Brian commented, here is a simple example. If you run following command:
+
+./command -yes -no /home/username
+
+    $# = 3
+    $* = -yes -no /home/username
+    $@ = array: {"-yes", "-no", "/home/username"}
+    $0 = ./command, $1 = -yes etc.
+
+$@:
+    Expands to the positional parameters, starting from one. When the expansion occurs within double-quotes, and where field splitting (see Field Splitting) is performed, each positional parameter shall expand as a separate field, with the provision that the expansion of the first parameter shall still be joined with the beginning part of the original word (assuming that the expanded parameter was embedded within a word), and the expansion of the last parameter shall still be joined with the last part of the original word. If there are no positional parameters, the expansion of '@' shall generate zero fields, even when '@' is double-quoted.
+$*:
+    Expands to the positional parameters, starting from one. When the expansion occurs within a double-quoted string (see Double-Quotes), it shall expand to a single field with the value of each parameter separated by the first character of the IFS variable, or by a if IFS is unset. If IFS is set to a null string, this is not equivalent to unsetting it; its first character does not exist, so the parameter values are concatenated.
+$#:
+    Expands to the decimal number of positional parameters. The command name (parameter 0) shall not be counted in the number given by '#' because it is a special parameter, not a positional parameter.
+$?:
+    Expands to the decimal exit status of the most recent pipeline (see Pipelines).
+$-:
+    (Hyphen.) Expands to the current option flags (the single-letter option names concatenated into a string) as specified on invocation, by the set special built-in command, or implicitly by the shell.
+$$:
+    Expands to the decimal process ID of the invoked shell. In a subshell (see Shell Execution Environment ), '$' shall expand to the same value as that of the current shell.
+$!:
+    Expands to the decimal process ID of the most recent background command (see Lists) executed from the current shell. (For example, background commands executed from subshells do not affect the value of "$!" in the current shell environment.) For a pipeline, the process ID is that of the last command in the pipeline.
+$0:
+    (Zero.) Expands to the name of the shell or shell script. See sh for a detailed description of how this name is derived.
+
+$_:
+    most recent parameter (or the abs path of the command to start the current shell immediately after startup).
+--------------------------------------------------------------------------------------------
+
+# Declare Array
+ARRAY[INDEXNR]=value // The INDEXNR is treated as an arithmetic expression that must evaluate to a positive number
+declare -a ARRAYNAME // Explicit declaration of an array is done using the declare built-in
+ARRAY=(value1 value2 ... valueN) // Array variables may also be created using compound assignments
+ARRAYNAME[indexnumber]=value // Adding missing or extra members in an array is done using the syntax
+
+# Dereferencing the variables in an array
+ARRAY=(one two three)
+echo ${ARRAY[*]}
+one two three
+echo $ARRAY[*]
+one[*]
+echo ${ARRAY[2]}
+three
+ARRAY[3]=four
+echo ${ARRAY[*]}
+one two three four
+
+# Deleting array variable
+unset ARRAY[1]
+echo ${ARRAY[*]}
+one three four
+unset ARRAY
+echo ${ARRAY[*]}
+<--no output-->
+
+args=("$@")  // store arguments in a special array
+ELEMENTS=${#args[@]} // get number of elements
+
+if [ ${#errors[@]} -eq 0 ]; then // Check if array is empty in Bash - https://serverfault.com/questions/477503/check-if-array-is-empty-in-bash
+    echo "No errors, hooray"
+else
+    echo "Oops, something went wrong..."
+fi
+
+# For loop // echo each element in array
+for (( i=0;i<$ELEMENTS;i++)); do 
+    echo ${args[${i}]} 
+done
+
+for i in 1 2 3 4 5
+do
+   echo "Welcome $i times"
+done
+
+for i in {1..5}
+do
+   echo "Welcome $i times"
+done
+
+echo "Bash version ${BASH_VERSION}..."
+for i in {0..10..2}
+  do 
+     echo "Welcome $i times"
+ done
+
+for i in ${farm_hosts[@]}; do
+  su $login -c "scp $httpd_conf_new ${i}:${httpd_conf_path}"
+  su $login -c "ssh $i sudo /usr/local/apache/bin/apachectl graceful"
+done
+
+# While loop
+while (( "$#" )); do 
+  echo $1 
+  shift //shift 1
+done
+
+# If statement:
+
+if [ $? != 0 ]; then
+  echo "Error"
+else
+  echo "Succesfull"
+fi
+
+SHIFT:
+--------------------------------------------------------------------------------------------
+function join_by { local IFS="$1"; shift; echo "$*"; } // https://stackoverflow.com/questions/1527049/join-elements-of-an-array
+
+It shifts the positional parameters (such as arguments passed to a bash script) to the left, putting each parameter in a lower position. // https://www.computerhope.com/unix/bash/shift.htm
+--------------------------------------------------------------------------------------------
+
+# Returning value from function - https://stackoverflow.com/questions/8742783/returning-value-from-called-function-in-a-shell-script
+
+--------------------------------------------------------------------------------------------
+
+A Bash function can't return a string directly like you want it to. You can do three things:
+
+  Echo a string
+  Return an exit status, which is a number, not a string
+  Share a variable
+
+This is also true for some other shells.
+
+Here's how to do each of those options:
+
+1. Echo strings
+
+lockdir="somedir"
+testlock(){
+    retval=""
+    if mkdir "$lockdir"
+    then # Directory did not exist, but it was created successfully
+         echo >&2 "successfully acquired lock: $lockdir"
+         retval="true"
+    else
+         echo >&2 "cannot acquire lock, giving up on $lockdir"
+         retval="false"
+    fi
+    echo "$retval"
+}
+
+retval=$( testlock )
+if [ "$retval" == "true" ]
+then
+     echo "directory not created"
+else
+     echo "directory already created"
+fi
+
+2. Return exit status
+
+lockdir="somedir"
+testlock(){
+    if mkdir "$lockdir"
+    then # Directory did not exist, but was created successfully
+         echo >&2 "successfully acquired lock: $lockdir"
+         retval=0
+    else
+         echo >&2 "cannot acquire lock, giving up on $lockdir"
+         retval=1
+    fi
+    return "$retval"
+}
+
+testlock
+retval=$?
+if [ "$retval" == 0 ]
+then
+     echo "directory not created"
+else
+     echo "directory already created"
+fi
+
+3. Share variable
+
+lockdir="somedir"
+retval=-1
+testlock(){
+    if mkdir "$lockdir"
+    then # Directory did not exist, but it was created successfully
+         echo >&2 "successfully acquired lock: $lockdir"
+         retval=0
+    else
+         echo >&2 "cannot acquire lock, giving up on $lockdir"
+         retval=1
+    fi
+}
+
+testlock
+if [ "$retval" == 0 ]
+then
+     echo "directory not created"
+else
+     echo "directory already created"
+fi
+--------------------------------------------------------------------------------------------
+
+# Check if list contain a value // https://stackoverflow.com/questions/8063228/how-do-i-check-if-a-variable-exists-in-a-list-in-bash
+--------------------------------------------------------------------------------------------
+[[ $list =~ (^|[[:space:]])$x($|[[:space:]]) ]] && echo 'yes' || echo 'no'
+
+or create a function:
+
+contains() {
+    [[ $1 =~ (^|[[:space:]])$2($|[[:space:]]) ]] && exit(0) || exit(1)
+}
+
+to use it:
+
+contains aList anItem
+echo $? # 0： match, 1: failed
+--------------------------------------------------------------------------------------------
+
+# 0 is a true, false is other than that // https://stackoverflow.com/questions/2933843/why-0-is-true-but-false-is-1-in-the-shell
+
+Conventionally, a status of zero signifies success and non-zero failure. e.g. in c++, c, java languages.
+
+
+
+There are two related issues here.
+
+First, the OP's question, Why 0 is true but false is 1 in the shell? and the second, why do applications return 0 for success and non-zero for failure?
+
+To answer the OP's question we need to understand the second question. The numerous answers to this post have described that this is a convention and have listed some of the niceties this convention affords. Some of these niceties are summarized below.
+
+Why do applications return 0 for success and non-zero for failure?
+
+Code that invokes an operation needs to know two things about the exit status of the operation. Did the operation exit successfully? [*1] And if the operation does not exit successfully why did the operation exit unsuccessfully? Any value could be used to denote success. But 0 is more convenient than any other number because it is portable between platforms. Summarizing xibo's answer to this question on 16 Aug 2011:
+
+    Zero is encoding-independent.
+
+    If we wanted to store one(1) in a 32-bit integer word, the first question would be "big-endian word or little-endian word?", followed by "how long are the bytes composing a little-endian word?", while zero will always look the same.
+
+    Also it needs to be expected that some people cast errno to char or short at some point, or even to float. (int)((char)ENOLCK) is not ENOLCK when char is not at least 8-bit long (7-bit ASCII char machines are supported by UNIX), while (int)((char)0) is 0 independent of the architectural details of char.
+
+Once it is determined that 0 will be the return value for success, then it makes sense to use any non-zero value for failure. This allows many exit codes to answer the question why the operation failed.
+
+Why 0 is true but false is 1 in the shell?
+
+One of the fundamental usages of shells is to automate processes by scripting them. Usually this means invoking an operation and then doing something else conditionally based on the exit status of the operation. Philippe A. explained nicely in his answer to this post that
+
+    In bash and in unix shells in general, return values are not boolean. They are integer exit codes.
+
+It's necessary then to interpret the exit status of these operations as a boolean value. It makes sense to map a successful (0) exit status to true and any non-zero/failure exit status to false. Doing this allows conditional execution of chained shell commands.
+
+Here is an example mkdir deleteme && cd $_ && pwd. Because the shell interprets 0 as true this command conveniently works as expected. If the shell were to interpret 0 as false then you'd have to invert the interpreted exit status for each operation.
+
+In short, it would be nonsensical for the shell to interpret 0 as false given the convention that applications return 0 for a successful exit status.
+
+[*1]: Yes, many times operations need to return more than just a simple success message but that is beyond the scope of this thread.
+
+See also Appendix E in the Advanced Bash-Scripting Guide
+--------------------------------------------------------------------------------------------
+
+# Add something to string // https://stackoverflow.com/questions/2250131/how-do-you-append-to-an-already-existing-string
+
+In classic sh, you have to do something like:
+
+s=test1
+s="${s}test2"
+
+(there are lots of variations on that theme, like s="$s""test2")
+
+In bash, you can use +=:
+
+s=test1
+s+=test2
+--------------------------------------------------------------------------------------------
+ 
+# Assign the output of a Bash command to a variable
+
+pwd=`pwd`
+pwd=$(pwd)
+--------------------------------------------------------------------------------------------
+================================================================================
 
 TEST: // https://ryanstutorials.net/bash-scripting-tutorial/bash-if-statements.php
+================================================================================
 The square brackets ( [ ] ) in the if statement above are actually a reference to the command test. This means that all of the operators that test allows may be used here as well. Look up the man page for test to see all of the possible operators (there are quite a few) but some of the more common ones are listed below.
-Operator  Description
-! EXPRESSION  The EXPRESSION is false.
--n STRING   The length of STRING is greater than zero.
--z STRING   The lengh of STRING is zero (ie it is empty).
-STRING1 = STRING2   STRING1 is equal to STRING2
-STRING1 != STRING2  STRING1 is not equal to STRING2
-INTEGER1 -eq INTEGER2   INTEGER1 is numerically equal to INTEGER2
-INTEGER1 -gt INTEGER2   INTEGER1 is numerically greater than INTEGER2
-INTEGER1 -lt INTEGER2   INTEGER1 is numerically less than INTEGER2
--d FILE   FILE exists and is a directory.
--e FILE   FILE exists.
--r FILE   FILE exists and the read permission is granted.
--s FILE   FILE exists and it's size is greater than zero (ie. it is not empty).
--w FILE   FILE exists and the write permission is granted.
--x FILE   FILE exists and the execute permission is granted.
+
+Arguments:
+
+The following arguments are used to construct this parameter:
+
+-e FileName - FileName exists
+
+All remaining arguments return true if the object (file or string) exists, and the condition specified is true.
+
+-b Filename - Returns a True exit value if the specified FileName exists and is a block special file
+-c FileName - FileName is a character special file
+-d FileName - FileName is a directory
+
+-f FileName - FileName is a regular file
+-g FileName - FileName's Set Group ID bit is set
+-h FileName - FileName is a symbolic link
+-k FileName - FileName's sticky bit is set
+-L FileName - FileName is a symbolic link
+-p FileName - FileName is a named pipe (FIFO)
+-r FileName - FileName is readable by the current process
+-s FileName - FileName has a size greater than 0
+-t FileDescriptor - FileDescriptor is open and associated with a terminal
+-u FileName - FileName's Set User ID bit is set
+
+-w FileName - FileName's write flag is on. However, the FileName will not be writable on a read-only file system even if test indicates true
+
+-x FileName - FileName's execute flag is on
+If the specified file exists and is a directory, the True exit value indicates that the current process has permission to change cd into the directory.
+
+Non standard Korn Shell extensions:
+
+file1 -nt file2 - file1 is newer than file2
+file1 -ot file2 - file1 is older than file2
+file1 -ef file2 - file1 is another name for file2 - (symbolic link or hard link)
+
+String arguments:
+
+In Perl, these sections are reversed: eq is a string operator and == is a numerical operator, and so on for the others.
+
+-n String1 - the length of the String1 variable is nonzero
+-z String1 - the length of the String1 variable is 0 (zero)
+String1 = String2 - String1 and String2 variables are identical
+String1 != String2 - String1 and String2 variables are not identical
+String1 - true if String1 variable is not a null string
+
+Number arguments:
+
+Integer1 -eq Integer2 - Integer1 and Integer2 variables are algebraically equal
+-ne - not equal
+-gt - greater than
+-ge - greater or equal 
+-lt - less than
+-le - less or equal
+
+Operators:
+
+test arguments can be combined with the following operators:
+
+! - Unary negation operator
+-a - Binary AND operator
+-o - Binary OR operator (the -a operator has higher precedence than the -o operator)
+\(Expression\) - Parentheses for grouping must be escaped with a backslash \
+
+The -a and -o operators, along with parentheses for grouping, are XSI extensions[2] and are therefore not portable. In portable shell scripts, the same effect may be achieved by connecting multiple invocations of test together with the && and || operators and parentheses.
+================================================================================
 
 SSH:
 ssh-copy-id // install your public key in a remote machine's authorized_keys - please test it how it works
@@ -291,15 +692,384 @@ Lufthansa:
 ansible-playbook -i inventories/dev/dev_mgmt ./playbooks/site.yml --limit build --tags "jenkins" --check --diff
 ansible-playbook -i inventories/prod/prod_mgmt ./playbooks/site.yml --limit jump --check --diff
 
+echo 'test' | ansible-vault encrypt_string --stdin-name 'variables_name'
+ansible-vault encrypt_string 'foobar' --name 'the_secret'
+
 Kibana and elasticsearch:
-https://kibana.mroapps.com/_cat/indices?v // show indices
+https://kibana.testapps.com/_cat/indices?v // show indices
 curl -XDELETE 'localhost:9200/twitter?pretty' // The above example deletes an index called twitter
 
+https://search-elasticsearch-jmsjh54wvyfgiohplxd36jpkke.eu-central-1.es.amazonaws.com
 
+
+https://kibana.testapps.com/_snapshot/snapshot-repository-DS // check settings of snapshot-repository-DS repository
+curl -u kibana -XPOST 'https://kibana.testapps.com/_snapshot/snapshot-repository-DS/_verify' // verify the repository
+curl -u kibana -XPUT 'https://kibana.testapps.com/_snapshot/snapshot-repository-DS/es_14_05_2018_full?wait_for_completion=false' // create snapshot named es_14_05_2018_full and wait until snapshot is compleated
+curl -u kibana -XGET 'https://kibana.testapps.com/_snapshot/snapshot-repository-DS/es_14_05_2018_full' // create snapshot named es_14_05_2018_full
+curl -u kibana -XGET 'https://kibana.testapps.com/_snapshot/snapshot-repository-DS/_current' // currently running snapshot
+curl -XGET 'https://search-elasticsearch6-sjlzpveakwbwubookdp7hih724.eu-central-1.es.amazonaws.com/_cat/repositories?v' // list repositories
+curl -XPOST 'https://search-elasticsearch6-sjlzpveakwbwubookdp7hih724.eu-central-1.es.amazonaws.com/_snapshot/snapshot-repository-DS/es_14_05_2018_full/_restore' // restore snapshot
+curl -XGET 'https://search-elasticsearch6-sjlzpveakwbwubookdp7hih724.eu-central-1.es.amazonaws.com/_cat/snapshots/snapshot-repository-DS?v&s=id' // list snapshots
+
+curl -XGET 'https://search-elasticsearch6-sjlzpveakwbwubookdp7hih724.eu-central-1.es.amazonaws.com/_snapshot/snapshot-repository-DS/es_14_05_2018_full/_status' // see restore status
+
+curl -XGET 'https://search-elasticsearch6-sjlzpveakwbwubookdp7hih724.eu-central-1.es.amazonaws.com/_cat/recovery' | grep -v "done"
+
+ssh -L 6543:search-elasticsearch-jmsjh54wvyfgiohplxd36jpkke.eu-central-1.es.amazonaws.com:443 jumphost-dev
+
+ssh -L 6543:search-elasticsearch6-sjlzpveakwbwubookdp7hih724.eu-central-1.es.amazonaws.com:443 jumphost-dev
+https://localhost:6543/_plugin/kibana/app/kibana
+
+
+
+
+
+
+curl -k -XPUT -H "Content-Type: application/json" https://localhost:6543/.kibana/_settings -d '{
+  "index.blocks.write": true
+}'
+
+
+
+curl -k -XPUT -H "Content-Type: application/json" https://localhost:6543/.kibana-6 -d '{
+  "settings" : {
+    "number_of_shards" : 1,
+    "index.mapper.dynamic": false
+  },
+  "mappings" : {
+    "doc": {
+      "properties": {
+        "type": {
+          "type": "keyword"
+        },
+        "updated_at": {
+          "type": "date"
+        },
+        "config": {
+          "properties": {
+            "buildNum": {
+              "type": "keyword"
+            }
+          }
+        },
+        "index-pattern": {
+          "properties": {
+            "fieldFormatMap": {
+              "type": "text"
+            },
+            "fields": {
+              "type": "text"
+            },
+            "intervalName": {
+              "type": "keyword"
+            },
+            "notExpandable": {
+              "type": "boolean"
+            },
+            "sourceFilters": {
+              "type": "text"
+            },
+            "timeFieldName": {
+              "type": "keyword"
+            },
+            "title": {
+              "type": "text"
+            }
+          }
+        },
+        "visualization": {
+          "properties": {
+            "description": {
+              "type": "text"
+            },
+            "kibanaSavedObjectMeta": {
+              "properties": {
+                "searchSourceJSON": {
+                  "type": "text"
+                }
+              }
+            },
+            "savedSearchId": {
+              "type": "keyword"
+            },
+            "title": {
+              "type": "text"
+            },
+            "uiStateJSON": {
+              "type": "text"
+            },
+            "version": {
+              "type": "integer"
+            },
+            "visState": {
+              "type": "text"
+            }
+          }
+        },
+        "search": {
+          "properties": {
+            "columns": {
+              "type": "keyword"
+            },
+            "description": {
+              "type": "text"
+            },
+            "hits": {
+              "type": "integer"
+            },
+            "kibanaSavedObjectMeta": {
+              "properties": {
+                "searchSourceJSON": {
+                  "type": "text"
+                }
+              }
+            },
+            "sort": {
+              "type": "keyword"
+            },
+            "title": {
+              "type": "text"
+            },
+            "version": {
+              "type": "integer"
+            }
+          }
+        },
+        "dashboard": {
+          "properties": {
+            "description": {
+              "type": "text"
+            },
+            "hits": {
+              "type": "integer"
+            },
+            "kibanaSavedObjectMeta": {
+              "properties": {
+                "searchSourceJSON": {
+                  "type": "text"
+                }
+              }
+            },
+            "optionsJSON": {
+              "type": "text"
+            },
+            "panelsJSON": {
+              "type": "text"
+            },
+            "refreshInterval": {
+              "properties": {
+                "display": {
+                  "type": "keyword"
+                },
+                "pause": {
+                  "type": "boolean"
+                },
+                "section": {
+                  "type": "integer"
+                },
+                "value": {
+                  "type": "integer"
+                }
+              }
+            },
+            "timeFrom": {
+              "type": "keyword"
+            },
+            "timeRestore": {
+              "type": "boolean"
+            },
+            "timeTo": {
+              "type": "keyword"
+            },
+            "title": {
+              "type": "text"
+            },
+            "uiStateJSON": {
+              "type": "text"
+            },
+            "version": {
+              "type": "integer"
+            }
+          }
+        },
+        "url": {
+          "properties": {
+            "accessCount": {
+              "type": "long"
+            },
+            "accessDate": {
+              "type": "date"
+            },
+            "createDate": {
+              "type": "date"
+            },
+            "url": {
+              "type": "text",
+              "fields": {
+                "keyword": {
+                  "type": "keyword",
+                  "ignore_above": 2048
+                }
+              }
+            }
+          }
+        },
+        "server": {
+          "properties": {
+            "uuid": {
+              "type": "keyword"
+            }
+          }
+        },
+        "timelion-sheet": {
+          "properties": {
+            "description": {
+              "type": "text"
+            },
+            "hits": {
+              "type": "integer"
+            },
+            "kibanaSavedObjectMeta": {
+              "properties": {
+                "searchSourceJSON": {
+                  "type": "text"
+                }
+              }
+            },
+            "timelion_chart_height": {
+              "type": "integer"
+            },
+            "timelion_columns": {
+              "type": "integer"
+            },
+            "timelion_interval": {
+              "type": "keyword"
+            },
+            "timelion_other_interval": {
+              "type": "keyword"
+            },
+            "timelion_rows": {
+              "type": "integer"
+            },
+            "timelion_sheet": {
+              "type": "text"
+            },
+            "title": {
+              "type": "text"
+            },
+            "version": {
+              "type": "integer"
+            }
+          }
+        },
+        "graph-workspace": {
+          "properties": {
+            "description": {
+              "type": "text"
+            },
+            "kibanaSavedObjectMeta": {
+              "properties": {
+                "searchSourceJSON": {
+                  "type": "text"
+                }
+              }
+            },
+            "numLinks": {
+              "type": "integer"
+            },
+            "numVertices": {
+              "type": "integer"
+            },
+            "title": {
+              "type": "text"
+            },
+            "version": {
+              "type": "integer"
+            },
+            "wsState": {
+              "type": "text"
+            }
+          }
+        }
+      }
+    }
+  }
+}'
+
+
+curl -k -XPOST -H "Content-Type: application/json" https://localhost:6543/_reindex -d '{
+  "source": {
+    "index": ".kibana"
+  },
+  "dest": {
+    "index": ".kibana-6"
+  },
+  "script": {
+    "inline": "ctx._source = [ ctx._type : ctx._source ]; ctx._source.type = ctx._type; ctx._id = ctx._type + \":\" + ctx._id; ctx._type = \"doc\"; ",
+    "lang": "painless"
+  }
+}'
+
+curl -k -XPOST -H "Content-Type: application/json" https://localhost:6543/_aliases -d '{
+  "actions" : [
+    { "add":  { "index": ".kibana-6", "alias": ".kibana" } },
+    { "remove_index": { "index": ".kibana" } }
+  ]
+}'
+
+
+Logging linux:
+https://unix.stackexchange.com/questions/115839/change-sshd-logging-file-location-on-centos
+
+
+
+Please post your sshd_config something else would seem to be up. A stock CentOS system always logs to /var/log/secure.
+Example
+
+$ sudo tail -f /var/log/secure
+Feb 18 23:23:34 greeneggs sshd[3545]: pam_succeed_if(sshd:auth): requirement "uid >= 1000" not met by user "root"
+Feb 18 23:23:36 greeneggs sshd[3545]: Failed password for root from ::1 port 46401 ssh2
+Feb 18 23:23:42 greeneggs unix_chkpwd[3555]: password check failed for user (root)
+Feb 18 23:23:42 greeneggs sshd[3545]: pam_succeed_if(sshd:auth): requirement "uid >= 1000" not met by user "root"
+Feb 18 23:23:43 greeneggs sshd[3545]: Failed password for root from ::1 port 46401 ssh2
+Feb 18 23:23:48 greeneggs sshd[3545]: Accepted password for root from ::1 port 46401 ssh2
+Feb 18 23:23:48 greeneggs sshd[3545]: pam_unix(sshd:session): session opened for user root by (uid=0)
+Feb 18 23:24:05 greeneggs sshd[3545]: Received disconnect from ::1: 11: disconnected by user
+Feb 18 23:24:05 greeneggs sshd[3545]: pam_unix(sshd:session): session closed for user root
+Feb 18 23:27:15 greeneggs sudo:     saml : TTY=pts/3 ; PWD=/home/saml ; USER=root ; COMMAND=/bin/tail /var/log/secure
+
+This is controlled through /etc/ssh/sshd_config:
+
+# Logging
+# obsoletes QuietMode and FascistLogging
+#SyslogFacility AUTH
+SyslogFacility AUTHPRIV
+#LogLevel INFO
+
+As well as the contents of /etc/rsyslog.conf:
+
+# Log anything (except mail) of level info or higher.
+# Don't log private authentication messages!
+*.info;mail.none;authpriv.none;cron.none                /var/log/messages
+
+# The authpriv file has restricted access.
+authpriv.*                                              /var/log/secure
+
+Your issue
+
+In one of your comments you mentioned that your rsyslogd config file was named /etc/rsyslog.config. That isn't the correct name for this file, and is likely the reason your logging is screwed up. Change the name of this file to /etc/rsyslog.conf and then restart the logging service.
+
+sudo service rsyslog restart
+
+
+
+What are the differences between “su”, “sudo -s”, “sudo -i”, “sudo su”?
+//https://askubuntu.com/questions/70534/what-are-the-differences-between-su-sudo-s-sudo-i-sudo-su
 
 OpemSSL:
 
 https://serverfault.com/questions/9708/what-is-a-pem-file-and-how-does-it-differ-from-other-openssl-generated-key-file // type of certs
+https://stackoverflow.com/questions/33494750/self-signed-certificate-for-public-and-private-ip-tomcat-7
 
 openssl genrsa -out ./skeyos.com.key 4096 // create rsa key
 openssl genrsa -des3 -out server.key 1024 // create rsa key with des3 encryption (passphrase)
@@ -316,6 +1086,10 @@ openssl x509 -in MYCERT.der -inform der -text // print certificate in der format
 
 cat mycert.crt intermediate.cert.pem > skeyos.com.chained.crt
 
+openssl genrsa -out mrologs.key 4096
+openssl req -new -out mrologs.csr -key mrologs.key -config openssl.cnf
+openssl x509 -req -days 3650 -in mrologs.csr -signkey mrologs.key -out mrologs.crt -extensions v3_req -extfile openssl.cnf
+
 
 PEM format - If they begin with -----BEGIN and you can read them in a text editor (they use base64, which is readable in ASCII, not binary format), they are in PEM format.
 
@@ -323,6 +1097,15 @@ sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./logstash.key 
 
 openssl s_client -connect {HOSTNAME}:{PORT} -showcerts // save a remote server SSL certificate locally as a file
 wget https:/server.edu:443/somepage --ca-certificate=mycertfile.pem // save a remote server SSL certificate locally as a file
+
+
+Self signed certificate:
+
+When certificate is self-signed, then issuer and subject field contains the same value. Also, there will be only this one certificate in the certificate path
+
+openssl x509 -in ./ops-aws/ansible/playbooks/roles/filebeat-proxy/files/mrologs.crt -noout -subject -issuer
+Issuer: C=PL, ST=Pomeranian, L=Gdansk, O=Kainos, OU=Enterprise, CN=mrolog
+Subject: C=PL, ST=Pomeranian, L=Gdansk, O=Kainos, OU=Enterprise, CN=mrolog
 
 Rsync:
 sudo rsync -az /vagrant/ /surecert/
@@ -462,6 +1245,8 @@ foo >> output.txt 2>&1
 
 appends to the output.txt file, without replacing the content.
 
+SED:
+sed -n 2280,2400p /var/log/wfeservices.log // print exacly these lines from file - https://unix.stackexchange.com/questions/288521/with-the-linux-cat-command-how-do-i-show-only-certain-lines-by-number/288525
 
 GREP, EGREP, FGREP:
 
@@ -529,6 +1314,8 @@ DN  Distinguish Name
 SSH Tunnels: - https://unix.stackexchange.com/questions/115897/whats-ssh-port-forwarding-and-whats-the-difference-between-ssh-local-and-remot:
 ssh -L 2000:localhost:8080 10.0.1.66
 
+Run remote command by ssh:
+"ssh -o StrictHostKeyChecking=no -i ${MP_PROD_SSH_KEY} ec2-user@10.66.70.47 \'if [ -e /etc/nginx/sites-enabled/wfeservices.conf ]; then sudo rm /etc/nginx/sites-enabled/wfeservices.conf ; fi\'"
 
 LAST:
 last // show last logged users
@@ -539,11 +1326,30 @@ git log -p --author="your_email@domain.com" --since="2018-01-11" --until="2018-0
 git config --list //will show credential.helper = manager (this is on a windows machine)
 
 git config credential.helper "" //To disable this cached username/password for your current local git folder, simply enter
+git config credential.helper store // To store credentials
+git config --global credential.helper store
 
 git config --global user.email "krzysztofsz@kainos.com"
 git config --global user.name "Krzysztof Szewczyk"
 
+git reset --soft HEAD~1
+
 git rebase -i HEAD~4 [commit_id] //squash 
+
+Add executable permission for sh scripts: //https://stackoverflow.com/questions/21691202/how-to-create-file-execute-mode-permissions-in-git-on-windows
+--------------------------------------------------------------------------------------------
+git add foo.sh
+git ls-files --stage
+100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0       foo.sh // permissions are 644
+git update-index --chmod=+x foo.sh // mark as executable before commiting
+git ls-files --stage
+100755 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0       foo.sh // permissions are 755
+
+or:
+
+git add --chmod=+x -- afile
+git commit -m "Executable!"
+--------------------------------------------------------------------------------------------
 
 SET: //https://stackoverflow.com/questions/2853803/in-a-shell-script-echo-shell-commands-as-they-are-executed
 
@@ -553,12 +1359,100 @@ set -v or set -o verbose does not expand the variables before printing.
 
 Use set +x and set +v to turn off the above settings.
 
+Switch users:
+su --login --shell type_of_shell user
+su -m, -p, --preserve-environment // Preserves the whole environment, ie does not set HOME, SHELL, USER nor LOGNAME.  The option is ignored if the option --login is specified.
+
+su -c ‘command’ // To run a single command as the root user with su. This is similar to running a command with sudo, but you’ll need the root account’s password instead of your current user account’s password
+
+sudo –i // To get a full, interactive root shell with sudo. Run the shell specified by the target user's password database entry as a login shell. This means that login-specific resource files such as .profile or .login will be read by the shell. If a command is specified, it is passed to the shell for execution via the shell's -c option. If no command is specified, an interactive shell is executed. sudo attempts to change to that user's home directory before running the shell. The command is run with an environment similar to the one a user would receive at log in. The Command environment section in the sudoers(5) manual documents how the -i option affects the environment in which a command is run when the sudoers policy is in use.
+
+sudo -u < username > //      
+-u user, --user=user
+    Run the command as a user other than the default target user (usually root). The user may be either a user name or a numeric user ID (UID) prefixed with the ‘#’ character (e.g. #0 for UID 0). When running commands as a UID, many shells require that the ‘#’ be escaped with a backslash (‘\’). Some security policies may restrict UIDs to those listed in the password database. The sudoers policy allows UIDs that are not in the password database as long as the targetpw option is not set. Other security policies may not support this.
+
+sudo su - // To get a full, interactive root shell with sudo
+
+SUDOERS: // https://www.garron.me/en/linux/visudo-command-sudoers-file-sudo-default-editor.html
+%admin – the group named "admin" (% prefix)
+ALL= – on all hosts (if you distribute the same sudoers file to many computers)
+(ALL) – as any target user
+ALL – can run any command
+
+A more restricted example would be:
+%mailadmin   snow,rain=(root) /usr/sbin/postfix, /usr/sbin/postsuper, /usr/bin/doveadm
+nobody       ALL=(root) NOPASSWD: /usr/sbin/rndc reload
+
+In this case, the group mailadmin is allowed to run mail server control tools as user root on hosts named "snow" and "rain". The user nobody is allowed to run rndc reload as root, on all hosts, without being asked for any password. (Normally sudo asks for the invoker's own password.)
+
+
+
+
+
+gksu // Graphical Versions of Su
+ssh -t myself@192.168.100.101 "su oracle"
+-t
+    Force pseudo-terminal allocation. This can be used to execute arbitrary screen-based programs on a remote machine, which can be very useful, e.g. when implementing menu services. Multiple -t options force tty allocation, even if ssh has no local tty
+
+
+
+nscd: // https://unix.stackexchange.com/questions/324913/sbin-nologin-and-bin-false-are-ignored-in-etc-passwd-as-a-user-shell
+Nscd is a daemon that provides a cache for the most common name service requests. The default configuration file, /etc/nscd.conf, 
+nscd -i passwd
+nscd -i group
+
+USERMOD:
+usermod -L <account> // block users password
+
+PASSWD:
+passwd <username> -l // lock the account
 
 Security issue:
 cat ./*access.log | awk '{print $1}' | sort -r | uniq -c | sort -nr
 cat ./*error.log | grep -o 'client: [0-9.]*' | sort -r | uniq -c | sort -nr
 zcat ./*.gz | awk '{print $1}' | sort -r | uniq -c | sort -nr
 zcat ./*.gz | grep -o 'client: [0-9.]*' | sort -r | uniq -c | sort -nr
+
+
+Powiększanie dysku online:
+
+Powiększamy dysk
+Sprawdzamy które urządzenie scsi odpowiada za dysk w systemie
+# ls -lad /sys/class/scsi_device/*/device/block/*
+ 
+Re-skanujemy odpowiednie urządzenie scsi (podmieniamy numerki 2\:0\:0\:0 na te znalezione w wyniku poprzedniego polecenia)
+# echo 1 > /sys/class/scsi_device/2\:0\:0\:0/device/rescan
+ 
+Za pomocą parted sprawdzamy czy się pojawiła nowa wielkość dysku w systemie (w fdisk tego nie widać)
+# parted /dev/sda print free
+ 
+Powiększamy odpowiednie partycje, standardowo w okta systemowy lv jest na partycji rozszerzonej wiec powiększamy najpierw partycję 3 a potem 5 (w tym wypadku partycja 3 jest extended a partycja 5 jest partycją LVM)
+# parted /dev/sda resizepart 3 100%
+# parted /dev/sda resizepart 5 100%
+ 
+Powiekszamy pv (wolumen fizyczny)
+# pvresize /dev/sda5
+ 
+Powiekszamy lv (wolumen logiczny)
+# lvextend -l+100%FREE /dev/vg_name/disk
+ 
+Powiekszamy fs (system plików)
+# resize2fs /dev/vg_name/disk
+ 
+Na centos 7 jest stary parted który nie ma resizepart
+Rozwiązaniem jest instalacja growpart
+# yum install cloud-utils-growpart
+# growpart /dev/sda 3
+# growpart /dev/sda 5
+
+# SET TIMEZONE
+timedatectl list-timezones
+sudo timedatectl set-timezone Europe/Warsaw
+timedatectl set-ntp yes
+timedatectl //Verify it
+
+Virtualbox mount sdcard on Linux From Windows using Virtualbox:
+
 
 ##################################################################################################################
 MAC - CLOSED CARDS:
@@ -850,6 +1744,9 @@ https://askubuntu.com/questions/30383/best-way-to-make-a-shutdown-hook
 Kumple:
 https://github.com/mazur92/simple-azure-vpn#note-about-operating-systems
 
+IO waiting:
+https://serverfault.com/questions/87504/is-cpu-actually-occupied-during-iowait-wa-in-top-on-linux-ec2
+https://serverfault.com/questions/12679/can-anyone-explain-precisely-what-iowait-is
 
 
 
@@ -897,5 +1794,51 @@ bootmenupolicy          Standard
 hypervisorlaunchtype    Off
 
 
-BCDEDIT /Set {current} hypervisorlaunchtype auto //Enable hyper-v at te startup
+BCDEDIT /Set {current} hypervisorlaunchtype auto //Enable hyper-v at the startup
 
+
+
+
+
+Service monitoring tools:
+Icinga
+Nagios
+
+Internet proxy:
+squid
+
+Proxy/loadbalancer:
+HAproxy
+Nginx
+https://github.com/containous/traefik
+https://github.com/linkerd/linkerd
+
+Proxy client:
+luminati
+
+Backups:
+Bacula
+backup - http://backup.github.io/backup/v4/
+duplicity+duply
+https://restic.net/
+rdiff-backup
+borg-backup
+bareos
+bacula
+
+Static analizer:
+FindBugs™ - Find Bugs in Java Program
+checkstyle
+PMD (software)
+
+Network:
+Clumsy makes your network condition on Windows significantly worse, but in a managed and interactive manner - https://jagt.github.io/clumsy/
+
+Radius:
+
+
+Witam. Na potrzeby swoich dzieci (a może raczej ze względu na wygodę własną) ich kompputery od kilku lat skonfigurowane są na maszyny niezniszczalne. Dzieci mają uprawnienia adminów (mogą robić co chcą, nawet zainstalować sobie milion wirusów), ale przy każdym restarcie ich systemy (obecnie Win 10 na 64GB dyskach SSD) przywracane są do stanu początkowego (Reboot Restore RX / Deep Freeze). Tak więc za każdym razem systemy są jak nowe. Nie stosuję antywirusów (trochę podśmiewam się ze środowiska antywirusowych pasjonatów ;-) przez co maszyny mają 100% swojej wydajności. Maszyny jak widać nie do zabicia. Oczywiście mają podłączone udziały sieciowe, na których mogą przechowywać dane trwałe, ale sam system jest niezniaszczalny. Oczywiście co kilka tygodni, czasem miesięcy, odfreezowuję dyski, przeprowadzam aktualizację, robię clonezillą backupy i tak dalej.
+
+Ale dzieci podrosły, i zaczął się problem z save-ami statusów gier komputerowych. O ile w przypadku instalacji niektórych gier, wystarczy zainstalować je na udziale sieciowym (i co ciekawe, po restarcie systemu ruszają z kopyta z podmontowanego dysku - co może być dziwne, bo przecież takie rzeczy, jak rejestr, program data itp są kasowane / zapominane przy restarcie) o tyle z save-ami statusów robi się problem. Każda gra, każdy tytuł, trzyma je w tylko sobie znanym miejscu. Zazwyczaj, gdzieś na dysku systemowym.
+
+I szczerze powiem - nie wiem jak podejść do tematu / jak uporać sobie z problemem zapisywania statusów gier komputerowych w tak spreparowanym środowisku. Z drugiej strony nie chcę rezygnować z wygodnego dla mnie rozwiązania z maszynami nie do zabicia. Rzuci ktoś jakiś pomysł, albo sprawdzone rozwiązanie?
