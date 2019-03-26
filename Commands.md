@@ -46,11 +46,12 @@ yum upgrade // updating all packages
 yum deplist httpd // see dependency list
 yum clean packages // delete instalation files, remove all temporary files
 yum makecache // refresh yum cache
-yum clean all // clean all cache
+yum clean all // clean all cache which default is /var/cache/yum
 yum whatprovides <package_name>
 
 rpm
 
+rpm -ql // list 
 rpm -ihv *.rpm // i - install, h - show progress, v - verbose
 rpm -q nano // query if nano installed
 rpm -qi nano // give more information about nano package 
@@ -64,6 +65,10 @@ Check the package location
 which package_name
 whereis package_name - finding binary, source and man files
 
+
+basename - print name of the filename without whole path
+xargs - używane do budowania i wykonywania poleceń ze standardowego wejścia. jądro Linuxa o wersji do 2.6.23 nie może pobierać dowolnie długiej listy argumentów, więc zadaniem xargs jest podzielenie jej na wystarczająco małe podlisty np. ls | xargs -n 1 basename
+
 Basic Shell:
 
 echo $SHELL
@@ -73,8 +78,8 @@ List:
 https://unix.stackexchange.com/questions/103114/what-do-the-fields-in-ls-al-output-mean
 
 ls - list files
-ls -a // list all files, even hidden
-ls -l // list file with details
+ls -a // list all files, even hidde
+nrals -l // list file with details
 ls -p // appended slash for folders
 ls -R // list recursive
 ls * // list similar to recursively
@@ -158,6 +163,10 @@ unzip -Z1 file.zip // List files what's in
 unzip /tmp/jpgc-casutg-2.1.zip -d /opt/apache-jmeter-3.3 // unzip to specific directory
 unzip -o /tmp/jpgc-graphs-basic-2.0.zip -d /opt/apache-jmeter-3.3 // unzip with override options
 
+Blockdev: //call block device ioctls from the command line
+
+blockdev --getbsz /dev/sdb // print blocksize in bytes.
+
 Uname:
 
 uname // retun information what kind of operating system
@@ -218,6 +227,13 @@ Devices:
 - /dev/random // virtual file/device for unix similar OS, it generates random numbers, it based on hardware drivers and other sources. Once reaidng from /dev/random random bytes will be generated. /dev/random is required when random numbers are crusial and when it is hard to predict them, for example to create cryptographic keys. /dev/random gets data from buffer. Once all data is read , reading thread stop reading from that buffor. It can be easily verify by running: cat /dev/random. /dev/random can not be used for generate random numbers in short period of time - /dev/urandom is used for that.
 
 - /dev/urandom // generate large amount of numbers, but they are less random. It uses hash functions. Most of the cryptographic tools like (np. OpenSSL, PGP i GnuPG) uses their own random generation mechanism but they are get "seed" from /dev/random.
+
+STRACE: //narzędzie do analizy kodu badające interakcję programu z jądrem systemu operacyjnego. Śledzi wywołania systemowe oraz sygnały w procesie.
+strace cd $HOME
+
+NMAP:
+sudo nmap -sP -PS22,3389 192.168.2.1/24 #custom TCP SYN scan
+sudo nmap -p 50-60 192.168.2.1/24
 
 TCPDUMP:
 tcpdump -i eth1 // monitor all packets on eth1 interface
@@ -287,6 +303,9 @@ rm ~/.bash_history // clear all history
 
 WAIT:
 wait // command which pauses until execution of a background process has ended.
+
+READLINK:
+readlink -f `which java`
 
 SET:
 
@@ -694,6 +713,8 @@ ansible-playbook -i inventories/prod/prod_mgmt ./playbooks/site.yml --limit jump
 
 echo 'test' | ansible-vault encrypt_string --stdin-name 'variables_name'
 ansible-vault encrypt_string 'foobar' --name 'the_secret'
+echo '$ANSIBLE_VAULT;1.1;AES256
+Variable' | ansible-vault decrypt
 
 Kibana and elasticsearch:
 https://kibana.testapps.com/_cat/indices?v // show indices
@@ -1075,7 +1096,7 @@ openssl genrsa -out ./skeyos.com.key 4096 // create rsa key
 openssl genrsa -des3 -out server.key 1024 // create rsa key with des3 encryption (passphrase)
 openssl rsa -in server.key.org -out server.key // remove encryption (passphrase)
 openssl rsa -in ./skeyos.com.key -pubout > ./skeyos.com.key.pub
-openssl req -new -sha256 -key ./skeyos.com.key -out ./skeyos.csom.key.csr // create sha256 CSR
+openssl req -new -sha256 -key ./skeyos.com.key -out ./skeyos.com.key.csr // create sha256 CSR
 openssl req -new -key server.key -out server.csr // create CSR
 openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt // generate self-signed certificate
 openssl req -in ./skeyos.com.key.csr -noout -text // see the content of the certificate
@@ -1083,6 +1104,7 @@ openssl req -in ./skeyos.com.key.csr -noout -text // see the content of the cert
 openssl x509 -in skeyos.com.chained.crt -text // print certificate 
 openssl x509 -in acs.qacafe.com.pem -text // print certificate in pem format
 openssl x509 -in MYCERT.der -inform der -text // print certificate in der format
+openssl req -text -noout -verify -in skeyos.com.key.csr // print CSR
 
 cat mycert.crt intermediate.cert.pem > skeyos.com.chained.crt
 
@@ -1090,12 +1112,15 @@ openssl genrsa -out mrologs.key 4096
 openssl req -new -out mrologs.csr -key mrologs.key -config openssl.cnf
 openssl x509 -req -days 3650 -in mrologs.csr -signkey mrologs.key -out mrologs.crt -extensions v3_req -extfile openssl.cnf
 
+openssl x509 -noout -fingerprint -sha1 -inform DER -in ../../rds-cert.crt // print fingerprint
+
 
 PEM format - If they begin with -----BEGIN and you can read them in a text editor (they use base64, which is readable in ASCII, not binary format), they are in PEM format.
 
 sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout ./logstash.key -out ./logstash.crt
 
 openssl s_client -connect {HOSTNAME}:{PORT} -showcerts // save a remote server SSL certificate locally as a file
+openssl s_client -servername NAME -connect HOST:PORT 2>/dev/null | openssl x509 -noout -dates
 wget https:/server.edu:443/somepage --ca-certificate=mycertfile.pem // save a remote server SSL certificate locally as a file
 
 
@@ -1247,6 +1272,14 @@ appends to the output.txt file, without replacing the content.
 
 SED:
 sed -n 2280,2400p /var/log/wfeservices.log // print exacly these lines from file - https://unix.stackexchange.com/questions/288521/with-the-linux-cat-command-how-do-i-show-only-certain-lines-by-number/288525
+sed -i -- 's@'"$IP_ADDRESS"'@'"$DESCRIPTION"'@' * //replace ip address by known name
+sed  '/\[option\]/a Hello World' input //Append line after match
+sed  '/\[option\]/i Hello World' input //Insert line before match
+
+Use sed to extract desired information, in that case it is hour (after letter T):
+#SCHEDULED_ACTIONS1_START_TIME=$(aws autoscaling describe-scheduled-actions --auto-scaling-group-name ${AUTO_SCALING_GROUP_NAME} --scheduled-action-names ${SCHEDULED_ACTIONS[0]} --region eu-central-1 | jq -r ". ScheduledUpdateGroupActions[] | .StartTime" |  sed 's/.*T\([0-9]\{2\}\).*/\1/')
+#SCHEDULED_ACTIONS2_START_TIME=$(aws autoscaling describe-scheduled-actions --auto-scaling-group-name ${AUTO_SCALING_GROUP_NAME} --scheduled-action-names ${SCHEDULED_ACTIONS[1]} --region eu-central-1 | jq -r ". ScheduledUpdateGroupActions[] | .StartTime" |  sed 's/.*T\([0-9]\{2\}\).*/\1/')
+
 
 GREP, EGREP, FGREP:
 
@@ -1304,7 +1337,7 @@ ST      stateOrProvinceName
 O       organizationName
 OU      organizationalUnitName
 C       countryName
-STREET  streetAddress
+STREET  streetAddressf
 DC      domainComponent
 UID     userid
 
@@ -1327,14 +1360,17 @@ git config --list //will show credential.helper = manager (this is on a windows 
 
 git config credential.helper "" //To disable this cached username/password for your current local git folder, simply enter
 git config credential.helper store // To store credentials
-git config --global credential.helper store
-
+git config --global credential.helper stor
+etcp
 git config --global user.email "krzysztofsz@kainos.com"
 git config --global user.name "Krzysztof Szewczyk"
 
 git reset --soft HEAD~1
 
-git rebase -i HEAD~4 [commit_id] //squash 
+git reset --hard <commit id> // reset hard
+git rebase -i HEAD~4 [commit_id] //squash
+
+git fetch // local repository gets all the new info from github
 
 Add executable permission for sh scripts: //https://stackoverflow.com/questions/21691202/how-to-create-file-execute-mode-permissions-in-git-on-windows
 --------------------------------------------------------------------------------------------
@@ -1598,6 +1634,15 @@ https://www.oreilly.com/learning/how-netflix-gives-all-its-engineers-ssh-access
 
 Regex check page:
 https://regex101.com/r/yN4tJ6/84
+
+? - match 0 or 1 repetition
++ - match 1 or more repetition
+* - match 0 or more repetition
+{m,n} - repetition from m to n
+[] - set of characters
+$ - matches the end of the string
+\w - any alphanumetic character [a-zA-Z0-9]
+\W - any non-alphanumeric character [^a-zA-Z0-9_]
 
 JamWiFi:
 https://github.com/unixpickle/JamWiFi
