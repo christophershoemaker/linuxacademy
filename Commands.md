@@ -100,7 +100,7 @@ su username // switch user, super user
 su - // become root user
 env // print environment variables
 top // shows spplication and processes running on the system
-netstat // shows the status of the network
+netstat // shows the status of the network (tunap)
 ifconfig // shows the network configurations that are set on out network devices
 ip addr // shows breakdown of all of the network ip addresses
 which // shows the location of application
@@ -297,6 +297,45 @@ docker build . // when you have specified docker image
 Docker cp file:
 docker cp <containerId>:/file/path/within/container /host/path/target
 
+KUBERNETES:
+
+choco install minikube
+
+minikube status
+minikube start --driver=virtualbox
+minikube stop
+minikube delete
+
+kubectl create deployment hello-minikube --image=k8s.gcr.io/echoserver:1.10
+kubectl api-versions
+kubectl config get-clusters
+kubectl config view
+
+kubectl apply -f 'C:\Users\krzysztofsz\Downloads\hellominicube.yml'
+
+kubectl version
+kubectl version --client
+where kubectl.exe
+
+kubectl.exe create deployment hello-minikube --image=k8s.gcr.io/echoserver:1.10
+kubectl expose deployment hello-minikube --type=NodePort --port=8080
+kubectl port-forward hello-minikube-5fc64454b4-jlqhr 8080:30962 --kubeconfig ./components/eks/kubeconfig_k8s-eks-test-eks_cluster-eks-1
+kubectl get pod
+minikube service hello-minikube --url
+
+kubectl delete deployment hello-minikube
+kubectl get pod
+kubectl delete services hello-minikube
+
+kubectl describe pod nginx
+kubectl describe node $node_name
+kubectl delete pod nginx
+
+kubectl get deployments
+kubectl describe deployment name-deployment
+
+
+
 HISTORY:
 history -c //clean history for current shell
 rm ~/.bash_history // clear all history
@@ -316,6 +355,7 @@ SHELL/BASH scripts:
 Variables: // https://superuser.com/questions/247127/what-is-and-in-linux/247131
 --------------------------------------------------------------------------------------------
 $? - The return value is stored in. 0 indicates success, others indicates error.
+$_ - is a special parameter that holds the last argument of the previous command. The quote around $_ make sure it works even if the folder name contains spaces.
 $@ - print all arguments submitted
 
 $#    Stores the number of command-line arguments that 
@@ -1123,6 +1163,8 @@ openssl s_client -connect {HOSTNAME}:{PORT} -showcerts // save a remote server S
 openssl s_client -servername NAME -connect HOST:PORT 2>/dev/null | openssl x509 -noout -dates
 wget https:/server.edu:443/somepage --ca-certificate=mycertfile.pem // save a remote server SSL certificate locally as a file
 
+Convert from pem to crt:
+openssl x509 -outform der -in your-cert.pem -out your-cert.crt
 
 Self signed certificate:
 
@@ -1365,12 +1407,16 @@ etcp
 git config --global user.email "krzysztofsz@kainos.com"
 git config --global user.name "Krzysztof Szewczyk"
 
+git merge --squash new-feature
+
 git reset --soft HEAD~1
 
 git reset --hard <commit id> // reset hard
 git rebase -i HEAD~4 [commit_id] //squash
 
 git fetch // local repository gets all the new info from github
+
+git commit --amend --no-edit --date "$(date)"
 
 Add executable permission for sh scripts: //https://stackoverflow.com/questions/21691202/how-to-create-file-execute-mode-permissions-in-git-on-windows
 --------------------------------------------------------------------------------------------
@@ -1486,6 +1532,7 @@ timedatectl list-timezones
 sudo timedatectl set-timezone Europe/Warsaw
 timedatectl set-ntp yes
 timedatectl //Verify it
+
 
 Virtualbox mount sdcard on Linux From Windows using Virtualbox:
 
@@ -1887,3 +1934,48 @@ Witam. Na potrzeby swoich dzieci (a może raczej ze względu na wygodę własną
 Ale dzieci podrosły, i zaczął się problem z save-ami statusów gier komputerowych. O ile w przypadku instalacji niektórych gier, wystarczy zainstalować je na udziale sieciowym (i co ciekawe, po restarcie systemu ruszają z kopyta z podmontowanego dysku - co może być dziwne, bo przecież takie rzeczy, jak rejestr, program data itp są kasowane / zapominane przy restarcie) o tyle z save-ami statusów robi się problem. Każda gra, każdy tytuł, trzyma je w tylko sobie znanym miejscu. Zazwyczaj, gdzieś na dysku systemowym.
 
 I szczerze powiem - nie wiem jak podejść do tematu / jak uporać sobie z problemem zapisywania statusów gier komputerowych w tak spreparowanym środowisku. Z drugiej strony nie chcę rezygnować z wygodnego dla mnie rozwiązania z maszynami nie do zabicia. Rzuci ktoś jakiś pomysł, albo sprawdzone rozwiązanie?
+
+
+
+
+
+Why the system shutdown ? https://unix.stackexchange.com/questions/9819/how-to-find-out-from-the-logs-what-caused-system-shutdown
+
+
+krzyszto pts/0        ip-10-0-1-11.eu- Fri May 17 10:19   still logged in
+runlevel (to lvl 3)   4.14.97-74.72.am Fri May 17 07:25 - 10:44  (03:19)     Maszynka monitoringowa pracuje od recznego startu
+reboot   system boot  4.14.97-74.72.am Fri May 17 07:25 - 10:44  (03:19)     Tutaj wchodze ja i startuje maszyne
+shutdown system down  4.14.97-74.72.am Fri May 17 00:34 - 07:25  (06:50)     System się zamknal - po prawie 7 godzinach od kiedy rozpoczal proces zamykania
+runlevel (to lvl 0)   4.14.97-74.72.am Fri May 17 00:34 - 00:34  (00:00)     System sam przechodzi w halt-state - rozpoczyna proces zamykania
+reboot   system boot  4.14.97-74.72.am Fri May 17 00:34 - 00:34  (00:00)     System sam się restartuje
+runlevel (to lvl 0)   4.14.97-74.72.am Fri May 17 00:34 - 00:34  (00:00)     System sam przechodzi w halt-state - rozpoczyna proces zamykania
+runlevel (to lvl 3)   4.14.97-74.72.am Thu May 16 11:21 - 00:34  (13:12)     System pracuje
+reboot   system boot  4.14.97-74.72.am Thu May 16 11:21 - 00:34  (13:12)     System startuje (bez poprzedniego zamkniecia), tak sie dzieje na przykład w przypadku nadlej stratu pradu) - moze to byc powiazane
+                                                                             z wczorajszymi problema
+
+
+Podany czas to GTM zeby na nasz przeliczyc trzeba doda 2 godziny !
+
+
+def creds = com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials(
+    com.cloudbees.plugins.credentials.common.StandardUsernameCredentials.class,
+    Jenkins.instance,
+    null,
+    null
+);
+for (c in creds) {
+     println( ( c.properties.privateKeySource ? "ID: " + c.id + ", UserName: " + c.username + ", Private Key: " + c.getPrivateKey() : ""))
+}
+
+for (c in creds) {
+     println( ( c.properties.password ? "ID: " + c.id + ", UserName: " + c.username + ", Password: " + c.password : ""))
+}
+
+//Secret Text
+def creds2 = com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials(
+    com.cloudbees.plugins.credentials.common.StandardCredentials.class,
+    Jenkins.instance,
+    null,
+    null
+);
+
